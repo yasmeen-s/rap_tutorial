@@ -1,0 +1,231 @@
+DNAnexus differs from traditional HPC systems in several ways:
+
+- **Non-POSIX Compliant Storage:**
+- DNAnexus storage system is not POSIX compliant.
+- It can hold various types of data objects such as files, directories, records, databases, applets, and workflows.
+- Unique features include:
+  - Files in a directory can have the same name.
+  - A filename can include slashes.
+  - A file and a directory may share a name.
+  - Renaming does not remove the target file or directory due to limitations in the DNAnexus API.
+
+- **Data Object ID:**
+- Every data object in DNAnexus has a unique ID starting with the class of the object followed by 24 alphanumeric characters.
+-  For example,
+  -  `project-GZ21K58J3Vbk25gZvj367213`.
+  -  `file-GYPxGkjJv70BzFpFq8f3YQ0P`
+```
+dx describe project-GZ21K58J3Vbk25gZvj367213 
+```
+
+![DNAnexus Image](https://github.com/yasmeen-s/dx_rap_tutorial/assets/100301745/a41243d3-2cf1-49f4-a5ce-9703ea749aba)
+
+
+## Project Paths
+
+```
+dx select 
+dx ls -l QCed_WES500k:/
+```
+- **Output:**
+  - Project: QCed_WES500k (project-GZ21K58J3Vbk25gZvj367213)
+  - Folder : /
+    - bgen_files/
+    - plink_files/
+
+```
+dx ls QCed_WES500k:/bgen_files/ukb23157_chr18*
+dx ls project-GZ21K58J3Vbk25gZvj367213:/bgen_files/ukb23157_chr18*
+qc_wes500k="project-GZ21K58J3Vbk25gZvj367213"
+dx ls ${qc_wes500k}:/bgen_files/ukb23157_chr18*
+```
+
+To improve the convenience of your script, it's a best practice to store project and file IDs in bash variables. This eliminates the need to repeatedly run `dx ls -l` commands to fetch these IDs. 
+Instead, you can define them once and use them throughout your script(s).
+
+Here's an example of defining bash variables for your projects:
+
+```bash
+# Define project IDs for easier reference
+dx_people="project-GZ21kb0J70P7Qq10b80g32F8"
+dx_wesdata="project-GZ21K58J3Vbk25gZvj367213"
+dx_ukb_data_20231214="project-GbgQPk0JGxxf9GpxkKxjxP6f"
+```
+lets explore people
+
+```bash
+dx ls -l  ${dx_people}:/
+```
+
+<img width="622" alt="image" src="https://github.com/yasmeen-s/dx_rap_tutorial/assets/100301745/d23bdfc2-559b-4048-ac81-38ea51090335">
+
+
+```
+my_dir="Summaira"
+dx mkdir ${dx_people}:/${my_dir}/06_rap_tutorial
+
+# store in a bach varaible
+dx_current_proj="${dx_summaira}/06_rap_tutorial"
+# create more directories
+dx mkdir ${dx_current_proj}/input
+dx mkdir ${dx_current_proj}/output
+dx mkdir ${dx_current_proj}/tmpdir
+
+```
+
+OPTIONAL: Likewise, similar idea locally for HPC adressess/paths
+
+```
+
+#!/bin/sh
+
+## bash variables to our main project space
+
+export comp_med=/sc-projects/sc-proj-computational-medicine
+export progs_dir=${comp_med}/programs
+export ukbb_data_old=${comp_med}/data/UK_biobank
+export ppl=${comp_med}/people
+
+## UKb resources 
+
+export ukb_resources=/sc-resources/ukb/data/bulk/genetic
+export ukb_imp=${ukb_resources}/imputed
+export ukb_arr=${ukb_resources}/array
+export ukb_wes200k=${ukb_resources}/wes
+
+## datasets
+export bgen_imp=${ukb_imp}/bgen_files_44448
+export raw_arr=${ukb_arr}/step1_regenie_44448
+export pruned_arr=${ukb_arr}/step1_regenie_44448/pruned_genotypes
+
+maik_dir="Maik"
+burulca_dir="Burulca"
+carl_dir="Carl"
+summaira="Summaira"
+
+dx_people="project-GZ21kb0J70P7Qq10b80g32F8"
+dx_wesdata="project-GZ21K58J3Vbk25gZvj367213"
+dx_ukb_data_20231214="project-GbgQPk0JGxxf9GpxkKxjxP6f"
+
+```
+
+
+```
+dx login
+dx logout
+dx select
+dx describe project-GZ21K58J3Vbk25gZvj367213
+dx describe ${dx_wesdata}
+dx pwd
+dx ls -l 
+dx mkir
+dx cat
+
+dx find jobs --state running --user yasmeens
+dx terminate job-ID
+```
+instance types 
+mem1_ssd1_v2_x8 (amazon)
+(<=2GB/core)-> Mem1 (16Gb memory)
+(<=20GB/core) -> ssd1 (160GB storage)
+
+mem1_ssd1_x8 (Azzure)
+(~1.9GB/core)-> Mem1 (16Gb memory)
+(16GB/core) -> ssd1 (128GB storage)
+
+more here:
+https://documentation.dnanexus.com/developer/api/running-analyses/instance-types
+Run a job at dnanexus!
+
+```
+#!/bin/sh
+
+
+# Define project variables
+dx_people="project-GZ21kb0J70P7Qq10b80g32F8"
+dx_wesdata="project-GZ21K58J3Vbk25gZvj367213"
+dx_bgen_dir="${dx_wesdata}:/bgen_files"
+dx_mydir="${dx_people}:/<your folder name>"
+dx mkdir ${dx_mydir}/01_test_run
+dx mkdir ${dx_mydir}/01_test_run/input
+dx mkdir ${dx_mydir}/01_test_run/output
+dx mkdir ${dx_mydir}/01_test_run/tmpdir
+
+
+dx_current_proj="${dx_mydir}/01_test_run/"
+dx_input="${dx_mydir}/01_test_run/input"
+dx_output="${dx_mydir}/01_test_run/output"
+
+## get local variables here as well
+
+
+export comp_med=/sc-projects/sc-proj-computational-medicine
+export progs_dir=${comp_med}/programs
+export ukbb_data_old=${comp_med}/data/UK_biobank
+export ppl=${comp_med}/people
+export current_proj= ${ppl}/Summaira/999_misc/01_test_run
+export input=${ppl}/Summaira/999_misc/01_test_run/input
+
+ pheno_file="all_both_pheno.gz"
+ cov_file="covariates.txt "
+ setlist_file="MC4R_functional.setlist"
+ anno_file="MC4R_functional.anno"
+ mask_file="MC4R_functional.masks"
+ predlist_file="t2d.pred.list"
+ pred_file="t2d.loco.gz"
+ pheno_name="date_250.2"
+ chr="18"
+  
+ ## now uplaod all required files in dx_input
+
+dx upload ${input}/${pheno_file} --no-progress --brief --wait --path ${dx_input}/
+dx upload ${input}/EUR_ukbb.id --no-progress --brief --wait --path ${dx_input}/
+dx upload ${input}/covariates.txt  --no-progress --brief --wait --path ${dx_input}/
+dx upload ${input}/t2d.loco.gz --no-progress --brief --wait --path ${dx_input}/
+dx upload ${input}/t2d.pred.list --no-progress --brief --wait --path ${dx_input}/
+dx upload ${input}/MC4R_functional.anno --no-progress --brief --wait --path ${dx_input}/
+dx upload ${input}/MC4R_functional.setlist --no-progress --brief --wait --path ${dx_input}/
+dx upload ${input}/MC4R_functional.masks  --brief --wait --path ${dx_input}/
+
+
+
+regenie_cmd="regenie --step 2 \
+  --ref-first \
+  --pred ${pred_file} \
+  --bgen ukb23157_chr${chr}.bgen \
+  --sample ukb23157_chr${chr}.sample \
+  --keep EUR_ukbb.id \
+  --phenoFile ${pheno_file} \
+  --phenoCol ${pheno_name} \
+  --covarFile ${cov_file} \
+  --covarExcludeList batch \
+  --anno-file ${anno_file} \
+  --set-list ${setlist_file}\
+  --mask-def ${mask_file} \
+  --build-mask max \
+  --bsize 1000 \
+  --threads 120 \
+  --bt \
+  --minMAC 1 \
+  --aaf-bins  0.005,0.00005 \
+  --joint acat \
+  --spa \
+  --gz \
+  --out t2d_test_output"
+
+dx run swiss-army-knife -iin="${dx_bgen_dir}/ukb23157_chr${chr}.bgen" \
+  -iin="${dx_bgen_dir}/ukb23157_chr${chr}.sample" \
+  -iin="${dx_bgen_dir}/ukb23157_chr${chr}.bgen.bgi" \
+  -iin="${dx_input}/EUR_ukbb.id" \
+  -iin="${dx_input}/${pheno_file}" \
+  -iin="${dx_input}/${cov_file}" \
+  -iin="${dx_input}/${setlist_file}" \
+  -iin="${dx_input}/${anno_file}" \
+  -iin="${dx_input}/${mask_file}" \
+  -iin="${dx_input}/${predlist_file}" \
+  -iin="${dx_input}/${pred_file}" \
+  -icmd="${regenie_cmd}" --tag="t2d_test_run" --instance-type "mem1_ssd1_v2_x2" \
+  --destination="${dx_output}/" --brief --yes
+
+
+```
